@@ -4,7 +4,10 @@
   "description": "MERN training making FB Commetn Box",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:server": "cd backend && nodemon server.js --exec babel-node --preset es2015, stage-0",
+    "start:client": "cd client && yarn start",
+    "start:dev": "concurrently \"yarn start:server\" \"yarn start:client\""
   },
   "author": "",
   "license": "ISC",
