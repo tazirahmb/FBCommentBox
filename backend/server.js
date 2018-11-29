@@ -2,26 +2,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const logger = require('morgan');
-//buat manggil bodyparser.
-const bodyParser = require('body-parser');
-
-//buat manggil mongoDB
-const MongoClient = require('mongodb').MongoClient; //manggil klien mongodb
-const ObjectID = require('mongodb').ObjectID; //manggil objectID
-const DBUrl = 'mongodb://127.0.0.1:27017/'; //URL lokasi database (beserta portnya)
-const DBName = "FBComment"; //nama database yang mau dipanggil
-
-let dbo = null;
-MongoClient.connect(DBUrl, (err, db) => {
-    if(err) throw err;  //cek kalo misal error
-    dbo = db.db(DBName);
-}); //koneksi database
+const mongoose = require('mongoose');
+const comment = require('./models/comment');
 
 const app = express();
 const router = express.Router();
 
 //port
 const API_PORT = process.env.API_PORT || 3001;
+
+mongoose.connect('mongodb://localhost:27017/myapp');
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB Connection Error:'));
 
 app.unsubscribe(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
@@ -32,6 +24,26 @@ router.get('/', (req, res) => {
     res.json({
         message: 'hello world!'
     });
+});
+
+router.get('/comments', (req, res) => {
+    comment.find((err, comments) => {
+        if (err) return res.json({ 
+            success: true,
+            data: comments
+        });
+    });
+});
+
+router.post('/comments', (req, res) => {
+    const comment = new Comment();
+    const {author, text} = req.body;
+    if(!author || !text) {
+        return res.json({
+            success: false,
+            error: 'you must provide an author and comment'
+        });
+    };
 });
 
 app.use('/api', router);
