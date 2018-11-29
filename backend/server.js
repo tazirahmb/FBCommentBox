@@ -3,10 +3,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
-const comment = require('./models/comment');
+const Comment = require('./models/comment');
 
 const app = express();
-const router = express.Router();
 
 //port
 const API_PORT = process.env.API_PORT || 3001;
@@ -15,9 +14,11 @@ mongoose.connect('mongodb://localhost:27017/myapp');
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB Connection Error:'));
 
-app.unsubscribe(bodyParser.urlencoded({ extended: false}));
+app.use(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
 app.use(logger('dev'));
+
+const router = express.Router();
 
 //inisiasi API dan router start
 router.get('/', (req, res) => {
@@ -27,23 +28,31 @@ router.get('/', (req, res) => {
 });
 
 router.get('/comments', (req, res) => {
-    comment.find((err, comments) => {
-        if (err) return res.json({ 
-            success: true,
-            data: comments
-        });
+    Comment.find((err, comments) => {
+        if (err) return res.json({ success: false, error: err });
+        return res.json({ success: true, data: comments });
     });
 });
 
 router.post('/comments', (req, res) => {
     const comment = new Comment();
     const {author, text} = req.body;
+
     if(!author || !text) {
         return res.json({
             success: false,
             error: 'you must provide an author and comment'
         });
-    };
+    }
+    comment.author = author;
+    comment.text = text;
+    comment.save(err => {
+        if (err) return res.json({
+            success: false,
+            error: err
+        });
+        return res.json({ success: true });
+    });
 });
 
 app.use('/api', router);
